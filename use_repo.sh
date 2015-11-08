@@ -54,5 +54,5 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
     brew install opencv
     cp /usr/local/lib/python2.7/site-packages/cv* $VENV/lib/python2.7/site-packages/
 else
-    robustus install opencv==2.4.11
+    robustus install opencv==2.4.8
 fi
