@@ -1,0 +1,14 @@
+language: python
+python:
+  - "2.7"
+cache:
+  apt: true
+  directories:
+  - $HOME/.robustus_rc/wheelhouse
+before_install:
+  - sudo apt-get update
+  - sudo apt-get -y install liblapack-dev gfortran cmake
+  - sudo apt-get install -y --force-yes python-pyside
+install:
+  - source use_repo.sh
+script: py.test
