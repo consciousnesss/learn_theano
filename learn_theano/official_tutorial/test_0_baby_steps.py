@@ -24,4 +24,3 @@ def test_0_baby_steps_matrices():
 
 if __name__ == '__main__':
     test_0_baby_steps_matrices()
-
