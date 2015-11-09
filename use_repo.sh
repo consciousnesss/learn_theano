@@ -18,20 +18,13 @@ done
 WDIR="$( pwd )"
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-
-if type python27 > /dev/null 2>/dev/null ; then
-    PYTHONEXEC=python27
-else
-    PYTHONEXEC=python
-fi
-
 # create virtualenv
 VENV=$DIR/venv
 if [ -d VENV ]; then
    # Virtual Env exists
    echo vitual environment $VENV exist
 else
-    virtualenv $VENV --python=$PYTHONEXEC --prompt "(learn_theano)"
+    virtualenv $VENV --prompt "(learn_theano)"
 fi
 
 source $VENV/bin/activate
