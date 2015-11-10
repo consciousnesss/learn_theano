@@ -105,13 +105,5 @@ class S3(object):
         return filenames
 
 
-if __name__ == '__main__':
-    artifacts = os.path.join(os.path.dirname(__file__), 'artifacts')
-    if not os.path.exists(artifacts):
-        os.mkdir(artifacts)
-
-    s3 = S3()
-    for k in s3.list_keys("datasets"):
-        print(k)
-    filenames = s3.download_folder('datasets')
-    print(filenames)
+def get_artifact(keyname):
+    return S3().download(keyname)
