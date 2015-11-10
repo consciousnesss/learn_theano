@@ -61,3 +61,6 @@ target/
 
 # venv
 venv
+
+# security props
+security.properties
