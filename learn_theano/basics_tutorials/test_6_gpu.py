@@ -29,7 +29,7 @@ def demo_theano_gpu():
 
 
 if __name__ == "__main__":
-    # to run on gpu, run from terminal THEANO_FLAGS='device=gpu' python learn_theano/official_tutorial/test_6_gpu.py
+    # to run on gpu, run from terminal THEANO_FLAGS='device=gpu' python learn_theano/basics_tutorials/test_6_gpu.py
     demo_theano_gpu()
     '''
     Results on mac book pro:
