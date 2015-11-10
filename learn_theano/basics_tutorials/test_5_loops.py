@@ -10,6 +10,7 @@ function that is passed to scan has the following order of arguments:
 sequences (if any), prior result(s) (if needed), non-sequences (if any)
 '''
 
+
 def test_5_loops_accumulator():
     '''
     result = 1

@@ -8,6 +8,7 @@ def test_3_configuring():
     Example to configure logic regression to work with float32
     '''
 
+    old_floatX = theano.config.floatX
     theano.config.floatX = 'float32'
 
     N = 400
@@ -52,6 +53,7 @@ def test_3_configuring():
     # can not use gpu on travis
     assert(used == "cpu")
     assert(theano.config.floatX == 'float32')
+    theano.config.floatX = old_floatX
 
 
 if __name__ == "__main__":
