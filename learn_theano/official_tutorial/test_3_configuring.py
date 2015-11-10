@@ -3,7 +3,13 @@ import theano.tensor as T
 import theano
 
 
-def test_4_configuring(device = 'cpu'):
+def test_3_configuring():
+    '''
+    Example to configure logic regression to work with float32
+    '''
+
+    theano.config.floatX = 'float32'
+
     N = 400
     features = 784
     training_steps = 2000
@@ -44,9 +50,9 @@ def test_4_configuring(device = 'cpu'):
         raise Exception('ERROR, not able to tell if theano used the cpu or the gpu')
 
     # can not use gpu on travis
-    assert(used == device)
+    assert(used == "cpu")
     assert(theano.config.floatX == 'float32')
 
 
 if __name__ == "__main__":
-    test_4_configuring(device='cpu')
+    test_3_configuring()
