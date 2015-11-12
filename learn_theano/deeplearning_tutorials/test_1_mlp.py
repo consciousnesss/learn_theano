@@ -91,7 +91,7 @@ def run_1_mlp():
     L1 = abs(hidden_layer_params[0]).sum() + abs(output_layer_params[0]).sum()
     L2 = T.sqr(hidden_layer_params[0]).sum() + T.sqr(output_layer_params[0]).sum()
 
-    cost = negative_log_likelihood_loss(output_layer_output, y) + L1_reg_coeff*L1 + L2_reg_coeff*L2
+    cost = negative_log_likelihood_loss(output_layer_output, y)# + L1_reg_coeff*L1 + L2_reg_coeff*L2
 
     minibatch_index = T.iscalar('minibatch_index')
 
@@ -106,9 +106,6 @@ def run_1_mlp():
         },
         profile=True
     )
-
-    theano.printing.pydotprint(learning_rate*T.grad(cost, hidden_layer_params[0]),
-                               outfile="logreg_pydotprint_prediction.png", var_with_name_simple=True)
 
     def train_model(*args):
         return train_model_impl(*args)
