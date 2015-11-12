@@ -54,15 +54,13 @@ def hidden_layer(input, n_in, n_out, rng):
 
 
 def run_1_mlp():
-    theano.config.floatX = 'float32'
-
     mnist_pkl = get_dataset('mnist')
     with open(mnist_pkl) as f:
         train_set, valid_set, test_set = pickle.load(f)
 
     batch_size = 20
     learning_rate = 0.01
-    n_epochs = 1000
+    n_epochs = 10
     L1_reg_coeff = 0.00
     L2_reg_coeff = 0.0001
     n_in=28*28
@@ -105,8 +103,12 @@ def run_1_mlp():
         givens={
             x: train_set_x[minibatch_index*batch_size:(minibatch_index+1)*batch_size],
             y: train_set_y[minibatch_index*batch_size:(minibatch_index+1)*batch_size],
-        }
+        },
+        profile=True
     )
+
+    theano.printing.pydotprint(learning_rate*T.grad(cost, hidden_layer_params[0]),
+                               outfile="logreg_pydotprint_prediction.png", var_with_name_simple=True)
 
     def train_model(*args):
         return train_model_impl(*args)
