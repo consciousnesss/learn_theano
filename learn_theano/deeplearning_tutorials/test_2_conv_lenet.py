@@ -124,10 +124,16 @@ def run_conv_net_image_filtering():
     output0 = filtered_image[0, 0, :, :]
     output1 = filtered_image[0, 1, :, :]
 
-    plots.subplot(1, 3, 1); plots.axis('off'); plots.imshow(img)
+    plots.subplot(1, 3, 1)
+    plots.axis('off')
+    plots.imshow(img)
     plots.gray()
-    plots.subplot(1, 3, 2); plots.axis('off'); plots.imshow(output0)
-    plots.subplot(1, 3, 3); plots.axis('off'); plots.imshow(output1)
+    plots.subplot(1, 3, 2)
+    plots.axis('off')
+    plots.imshow(output0)
+    plots.subplot(1, 3, 3)
+    plots.axis('off')
+    plots.imshow(output1)
     plots.show()
 
 
@@ -274,7 +280,6 @@ def run_2_lenet_training():
 
     with open('trained_lenet.pkl', 'w') as f:
         pickle.dump([p.get_value(borrow=True) for p in all_parameters], f, protocol=pickle.HIGHEST_PROTOCOL)
-
 
 
 if __name__ == "__main__":
