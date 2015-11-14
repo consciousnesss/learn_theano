@@ -150,7 +150,6 @@ def run_2_lenet_training():
 
     n_train_batches = train_set_x.get_value(borrow=True).shape[0]/batch_size
 
-    # load the whole test and validation set
     test_batch_size = batch_size
     n_validation_batches = valid_set_x.get_value(borrow=True).shape[0]/test_batch_size
     n_test_batches = test_set_x.get_value(borrow=True).shape[0]/test_batch_size
@@ -280,3 +279,8 @@ def run_2_lenet_training():
 
 if __name__ == "__main__":
     run_2_lenet_training()
+    '''
+    Expected results:
+    Optimization complete in 5445.7s (90min) with best validation score of 0.900000 %, with test performance 0.930000 %
+    The code run for 199 epochs, with 0.036543 epochs/sec
+    '''
