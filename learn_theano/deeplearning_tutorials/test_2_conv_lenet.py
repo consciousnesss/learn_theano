@@ -80,7 +80,7 @@ def max_pooling_layer(input, maxpool_shape):
 def conv_poll_layer(input, feature_maps_count_in, feature_maps_count_out, filter_shape, maxpool_shape, image_shape, rng):
     fan_in = feature_maps_count_in*np.prod(filter_shape)
     fan_out = feature_maps_count_out*np.prod(filter_shape)/np.prod(maxpool_shape)
-    W_bound = np.sqrt(6 / (fan_in + fan_out))
+    W_bound = np.sqrt(6. / (fan_in + fan_out))
 
     weights_shape = (feature_maps_count_out, feature_maps_count_in, filter_shape[0], filter_shape[1])
     W = theano.shared(
@@ -137,7 +137,7 @@ def run_2_lenet_training():
         train_set, valid_set, test_set = pickle.load(f)
 
     batch_size = 500
-    learning_rate = 0.9
+    learning_rate = 0.1
     n_epochs = 200
     n_hidden = 500
     n_out=10
