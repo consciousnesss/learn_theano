@@ -1,7 +1,6 @@
 import numpy as np
 
 
-
 def tile_raster_images(X, img_shape, tile_shape, tile_spacing=(0, 0),
                        scale_rows_to_unit_interval=True):
     """
