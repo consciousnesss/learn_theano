@@ -83,6 +83,8 @@ class S3(object):
             else:
                 os.remove(uncompressed_filename)
                 raise Exception("Failed to uncompress %s" % (filename,))
+        else:
+            print("Returning uncompressed file %s from cache" % (uncompressed_filename,))
         return uncompressed_filename
 
     def download_folder(self, s3_folder, results_folder=None, decompress=True):

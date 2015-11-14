@@ -1,4 +1,6 @@
 from learn_theano.utils.s3_download import S3
+import os
+import cv2
 
 
 datasets = {
@@ -15,6 +17,11 @@ def download_all_datasets():
 
 def get_dataset(name):
     return S3().download(datasets[name])
+
+
+def get_3_wolves_image():
+    filename = os.path.join(os.path.dirname(__file__), 'artifacts/3wolfmoon.jpg')
+    return cv2.imread(filename)
 
 
 if __name__ == "__main__":
