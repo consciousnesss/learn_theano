@@ -23,40 +23,35 @@ def load_dataset(dataset):
     return set_x, T.cast(set_y, 'int32')
 
 
-def logistic_layer(input, n_in, n_out):
-    W = theano.shared(
-        np.zeros((n_in, n_out), dtype=theano.config.floatX),
-        name='W',
-        borrow=True)
-    b = theano.shared(
-        np.zeros((n_out,), dtype=theano.config.floatX),
-        name='b',
-        borrow=True
-    )
-    return T.nnet.softmax(T.dot(input, W)+b), [W, b]
-
-
-def hidden_layer(input, n_in, n_out, rng):
+def denoising_autoencoder(input, n_visible, n_hidden, rng):
     w_init = rng.uniform(
-        low=-np.sqrt(6./(n_in + n_out)),
-        high=np.sqrt(6./(n_in + n_out)),
-        size=(n_in, n_out))
+        low=-4*np.sqrt(6./(n_visible + n_hidden)),
+        high=4*np.sqrt(6./(n_visible + n_hidden)),
+        size=(n_visible, n_hidden))
     W = theano.shared(
         np.asarray(w_init, dtype=theano.config.floatX),
         name='W',
         borrow=True)
-    b = theano.shared(
-        np.zeros((n_out,), dtype=theano.config.floatX),
-        name='b',
+    b_hidden = theano.shared(
+        np.zeros((n_hidden,), dtype=theano.config.floatX),
+        name='b_hidden',
         borrow=True
     )
-    return T.tanh(T.dot(input, W)+b), [W, b]
+    b_visible = theano.shared(
+        np.zeros((n_visible,), dtype=theano.config.floatX),
+        name='b_visible',
+        borrow=True
+    )
+
+    hidden_output = T.nnet.sigmoid(T.dot(input, W)+b_hidden)
+    reconstructed = T.nnet.sigmoid(T.dot(hidden_output, W.T)+b_visible)
+    return hidden_output, reconstructed, [W, b_hidden, b_visible]
 
 
-def run_1_mlp():
+def run_3_denoising_autoencoder():
     mnist_pkl = get_dataset('mnist')
     with open(mnist_pkl) as f:
-        train_set, valid_set, test_set = pickle.load(f)
+        train_set, _, _ = pickle.load(f)
 
     batch_size = 20
     learning_rate = 0.01
@@ -69,23 +64,13 @@ def run_1_mlp():
     rng = np.random.RandomState(1234)
 
     train_set_x, train_set_y = load_dataset(train_set)
-    valid_set_x, valid_set_y = load_dataset(valid_set)
-    test_set_x, test_set_y = load_dataset(test_set)
 
     n_train_batches = train_set_x.get_value(borrow=True).shape[0]/batch_size
-
-    # load the whole test and validation set
-    test_batch_size = valid_set_x.get_value(borrow=True).shape[0]
-    n_validation_batches = valid_set_x.get_value(borrow=True).shape[0]/test_batch_size
-    n_test_batches = test_set_x.get_value(borrow=True).shape[0]/test_batch_size
 
     x = T.matrix('x')
     y = T.ivector('y')
 
-    hidden_layer_output, hidden_layer_params = hidden_layer(x, n_in, n_hidden, rng)
-    output_layer_output, output_layer_params = logistic_layer(hidden_layer_output, n_hidden, n_out)
-
-    y_predict = T.argmax(output_layer_output, axis=1)
+    hidden_output, reconstructed, params = denoising_autoencoder(input, n_in, n_hidden, rng)
 
     # weights decay
     L1 = abs(hidden_layer_params[0]).sum() + abs(output_layer_params[0]).sum()
@@ -163,13 +148,4 @@ def run_1_mlp():
 
 
 if __name__ == "__main__":
-    '''
-    Expected results:
-    cpu:
-    Optimization complete in 2131.8s with best validation score of 1.680000 %, with test performance 1.650000 %
-The code run for 999 epochs, with 0.468623 epochs/sec
-    '''
-    run_1_mlp()
-    # from learn_theano.utils.profiler_run import profiler_run
-    # profiler_run('run_1_mlp()',
-    #              print_callers_of="function_module.py:482")
+    run_3_denoising_autoencoder()
