@@ -91,11 +91,11 @@ def run_1_mlp():
     L1 = abs(hidden_layer_params[0]).sum() + abs(output_layer_params[0]).sum()
     L2 = T.sqr(hidden_layer_params[0]).sum() + T.sqr(output_layer_params[0]).sum()
 
-    cost = negative_log_likelihood_loss(output_layer_output, y)# + L1_reg_coeff*L1 + L2_reg_coeff*L2
+    cost = negative_log_likelihood_loss(output_layer_output, y) + L1_reg_coeff*L1 + L2_reg_coeff*L2
 
     minibatch_index = T.iscalar('minibatch_index')
 
-    train_model_impl = theano.function(
+    train_model = theano.function(
         inputs=[minibatch_index],
         outputs=[],
         updates=[[p, p - learning_rate*T.grad(cost, p)]
@@ -107,10 +107,7 @@ def run_1_mlp():
         profile=True
     )
 
-    def train_model(*args):
-        return train_model_impl(*args)
-
-    validation_model_impl = theano.function(
+    validation_model = theano.function(
         inputs=[minibatch_index],
         outputs=one_zero_loss(y_predict, y),
         givens={
@@ -119,10 +116,7 @@ def run_1_mlp():
         }
     )
 
-    def validation_model(*args):
-        return validation_model_impl(*args)
-
-    test_model_impl = theano.function(
+    test_model = theano.function(
         inputs=[minibatch_index],
         outputs=one_zero_loss(y_predict, y),
         givens={
@@ -130,9 +124,6 @@ def run_1_mlp():
             y: test_set_y[minibatch_index*test_batch_size:(minibatch_index+1)*test_batch_size],
         }
     )
-
-    def test_model(*args):
-        return test_model_impl(*args)
 
     start_time = time.time()
 
