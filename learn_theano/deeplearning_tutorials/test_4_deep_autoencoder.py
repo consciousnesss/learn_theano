@@ -179,8 +179,8 @@ def run_4_stacked_autoencoder():
         for epoch in range(pretraining_epochs):
             costs = []
             epoch_start_time = time.time()
-            for minibatch_index in range(n_train_batches):
-                costs.append(pretraining_model(minibatch_index))
+            for minibatch_index_value in range(n_train_batches):
+                costs.append(pretraining_model(minibatch_index_value))
             print("Layer %d: mean costs at epoch %d is %f%% (ran for %.1fs)" %
                   (i, epoch, np.mean(costs), time.time() - epoch_start_time))
 
@@ -201,9 +201,9 @@ def run_4_stacked_autoencoder():
         print('Going to run the finetuning training with floatX=%s' % (theano.config.floatX))
         for epoch in range(finetune_training_epochs):
             epoch_start = time.time()
-            for minibatch_index in range(n_train_batches):
-                finetune_train_model(minibatch_index)
-                iteration = epoch*n_train_batches + minibatch_index
+            for minibatch_index_value in range(n_train_batches):
+                finetune_train_model(minibatch_index_value)
+                iteration = epoch*n_train_batches + minibatch_index_value
                 if (iteration + 1) % validation_frequency == 0.:
                     validation_cost = np.mean([validation_model(i) for i in range(n_validation_batches)])
                     print('epoch %i, validation error %f %%' % (epoch, validation_cost * 100.))
