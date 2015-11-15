@@ -233,4 +233,12 @@ if __name__ == "__main__":
     No pretraining:
 Optimization complete in 1478.6s with best validation score of 1.960000 %, with test performance 2.130000 %
 The code run for 15 epochs, with 0.010145 epochs/sec
+
+    With pretraining:
+The pretraining code for layer 0 run 676.4s, for 14 epochs, for with 0.020697 epochs/sec
+The pretraining code for layer 1 run 902.2s, for 14 epochs, for with 0.015518 epochs/sec
+The pretraining code for layer 2 run 1080.3s, for 14 epochs, for with 0.012960 epochs/sec
+
+    Optimization complete in 4583.6s with best validation score of 1.450000 %, with test performance 1.360000 %
+The code run for 49 epochs, with 0.010690 epochs/se
     '''
