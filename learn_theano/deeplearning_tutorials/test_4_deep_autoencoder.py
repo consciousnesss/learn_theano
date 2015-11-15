@@ -59,9 +59,25 @@ def logistic_layer(input, n_in, n_out):
     return T.nnet.softmax(T.dot(input, W)+b), [W, b]
 
 
-def autoencoder(input, n_visible, W, b_hidden):
+def deep_mlp(input, n_in, n_out, hidden_layers_sizes, rng):
+    current_input = input
+    current_input_size = n_in
+    params = []
+    layers_description = []
+    for i, hidden_layer_size in enumerate(hidden_layers_sizes):
+        layer_output, layer_params = sigmoid_layer(current_input, current_input_size, hidden_layer_size, rng)
+        params += layer_params
+        layers_description.append((current_input, layer_params))
+        current_input = layer_output
+        current_input_size = hidden_layer_size
+    output_layer, output_layer_params = logistic_layer(current_input, current_input_size, n_out)
+    params += output_layer_params
+    return output_layer, params, layers_description
+
+
+def autoencoder(input, W, b_hidden):
     b_visible = theano.shared(
-        np.zeros((n_visible,), dtype=theano.config.floatX),
+        np.zeros((W.get_value(borrow=True).shape[0],), dtype=theano.config.floatX),
         name='b_visible',
         borrow=True
     )
@@ -70,57 +86,22 @@ def autoencoder(input, n_visible, W, b_hidden):
     return reconstructed, [W, b_hidden, b_visible]
 
 
-def stacked_autoencoders(input, n_in, n_out, hidden_layers_sizes, rng):
-    current_input = input
-    current_input_size = n_in
-    params = []
-    for hidden_layer_size in hidden_layers_sizes:
-        layer_output, (W, b_hidden) = sigmoid_layer(current_input, current_input_size, hidden_layer_size, rng)
-        params += [W, b_hidden]
-
-        # this autoencoder shares weights and biases with the sigmoid layer (reconstructing biases)
-        reconstructed_out, params = autoencoder(current_input, current_input_size, W, b_hidden)
-
-        current_input = layer_output
-        current_input_size = hidden_layer_size
-
-    output_layer, output_layer_params = logistic_layer(current_input, current_input_size, n_out)
-    params += output_layer_params
-    return output_layer, params
-
-
-def autoencoder_costs(input, reconstructed_output, corruption_level, learning_rate, theano_rng):
-    """ This function computes the cost and the updates for one trainng
-    step of the dA """
-
-    corrupted_input = theano_rng.binomial(size=input.shape, n=1,
-                                          p=1-corruption_level, dtype=theano.config.floatX)*input
-    cost = mean_cross_entropy(reconstructed_output, input)
-
-    # compute the gradients of the cost of the `dA` with respect
-    # to its parameters
-    gparams = T.grad(cost, self.params)
-    # generate the list of updates
-    updates = [
-        (param, param - learning_rate * gparam)
-        for param, gparam in zip(self.params, gparams)
-    ]
-
-    return (cost, updates)
-
-
-def run_4_stacked_autoencoder(corruption_level=0.3):
+def run_4_stacked_autoencoder():
     mnist_pkl = get_dataset('mnist')
     with open(mnist_pkl) as f:
         train_set, valid_set, test_set = pickle.load(f)
 
-    batch_size = 20
-    learning_rate = 0.01
-    training_epochs = 250
+    batch_size = 1
+    finetune_learning_rate = 0.1
+    finetune_training_epochs = 50
+
+    pretrain_learning_rate = 0.001
+    pretraining_epochs = 15
     n_in=28*28
-    hidden_layers_sizes=[500, 500]
+    hidden_layers_sizes=[1000, 1000, 1000]
+    corruption_levels = [.1, .2, .3]
     n_out=10
-    rng = np.random.RandomState(123)
+    rng = np.random.RandomState(89677)
     theano_rng = RandomStreams(rng.randint(2 ** 30))
 
     train_set_x, train_set_y = load_dataset(train_set)
@@ -129,61 +110,127 @@ def run_4_stacked_autoencoder(corruption_level=0.3):
 
     n_train_batches = train_set_x.get_value(borrow=True).shape[0]/batch_size
 
-    # load the whole test and validation set
     test_batch_size = valid_set_x.get_value(borrow=True).shape[0]
     n_validation_batches = valid_set_x.get_value(borrow=True).shape[0]/test_batch_size
     n_test_batches = test_set_x.get_value(borrow=True).shape[0]/test_batch_size
 
+    # construct deep mlp
     x = T.matrix('x')
     y = T.ivector('y')
-
-    output_layer_output, params = stacked_autoencoders(x, n_in=n_in, n_out=n_out, hidden_layers_sizes=hidden_layers_sizes, rng=rng)
-
-    y_predict = T.argmax(output_layer_output, axis=1)
-
-    finetune_cost = negative_log_likelihood_loss(output_layer_output, y)
-
+    mlp_output, mlp_params, layers_description = deep_mlp(x, n_in=n_in, n_out=n_out, hidden_layers_sizes=hidden_layers_sizes, rng=rng)
 
     minibatch_index = T.iscalar('minibatch_index')
 
-    corruption_level_sym = T.scalar('corruption')
-    learning_rate_sym = T.scalar('learning_rate')
+    # pretrain
+    pretraining_models = []
+    for i, (layer_input, (W, b_hidden)) in enumerate(layers_description):
+        corrupted_input = theano_rng.binomial(
+            size=layer_input.shape, n=1, p=1-corruption_levels[i], dtype=theano.config.floatX)*layer_input
+        reconstructed_output, autoencoder_params = autoencoder(corrupted_input, W, b_hidden)
+        pretraining_cost = mean_cross_entropy(reconstructed_output, layer_input)
+        pretraining_model = theano.function(
+            inputs=[minibatch_index],
+            outputs=[pretraining_cost],
+            updates=[[p, p - pretrain_learning_rate*T.grad(pretraining_cost, p)]
+                     for p in autoencoder_params],
+            givens={
+                x: train_set_x[minibatch_index*batch_size:(minibatch_index+1)*batch_size],
+            }
+        )
+        pretraining_models.append(pretraining_model)
 
-    #corrupted_input = theano_rng.binomial(size=x.shape, n=1, p=1-corruption_level, dtype=theano.config.floatX)*x
-    #cost = mean_cross_entropy(reconstructed, x)
+    y_predict = T.argmax(mlp_output, axis=1)
+    finetune_cost = negative_log_likelihood_loss(mlp_output, y)
 
-
-    train_model = theano.function(
+    finetune_train_model = theano.function(
         inputs=[minibatch_index],
-        outputs=[cost],
-        updates=[[p, p - learning_rate*T.grad(cost, p)]
-                 for p in params],
+        outputs=[finetune_cost],
+        updates=[[p, p - finetune_learning_rate*T.grad(finetune_cost, p)]
+                 for p in mlp_params],
         givens={
             x: train_set_x[minibatch_index*batch_size:(minibatch_index+1)*batch_size],
+            y: train_set_y[minibatch_index*batch_size:(minibatch_index+1)*batch_size]
         },
         profile=False
     )
 
+    validation_model = theano.function(
+        inputs=[minibatch_index],
+        outputs=one_zero_loss(y_predict, y),
+        givens={
+            x: valid_set_x[minibatch_index*test_batch_size:(minibatch_index+1)*test_batch_size],
+            y: valid_set_y[minibatch_index*test_batch_size:(minibatch_index+1)*test_batch_size],
+        }
+    )
+
+    test_model = theano.function(
+        inputs=[minibatch_index],
+        outputs=one_zero_loss(y_predict, y),
+        givens={
+            x: test_set_x[minibatch_index*test_batch_size:(minibatch_index+1)*test_batch_size],
+            y: test_set_y[minibatch_index*test_batch_size:(minibatch_index+1)*test_batch_size],
+        }
+    )
+
+    for i, pretraining_model in enumerate(pretraining_models):
+        pretraining_start_time = time.time()
+
+        print('Going to run the pretraining for layer %d with floatX=%s' % (i, theano.config.floatX))
+        for epoch in range(pretraining_epochs):
+            costs = []
+            epoch_start_time = time.time()
+            for minibatch_index in range(n_train_batches):
+                costs.append(pretraining_model(minibatch_index))
+            print("Layer %d: mean costs at epoch %d is %f%% (ran for %.1fs)" %
+                  (i, epoch, np.mean(costs), time.time() - epoch_start_time))
+
+        total_pretraining_time = time.time()-pretraining_start_time
+        print('The pretraining code for layer %d run %.1fs, for %d epochs, for with %f epochs/sec' %
+              (i, total_pretraining_time, epoch, epoch/total_pretraining_time))
+
     start_time = time.time()
 
-    print('Going to run the training with floatX=%s' % (theano.config.floatX))
-    for epoch in range(training_epochs):
-        costs = []
-        epoch_start_time = time.time()
-        for minibatch_index in range(n_train_batches):
-            costs.append(train_model(minibatch_index))
-        print("Mean costs at epoch %d is %f%% (ran for %.1fs)" % (epoch, np.mean(costs), time.time() - epoch_start_time))
+    def main_loop():
+        patience = 10 * n_train_batches
+        patience_increase = 2
+        improvement_threshold = 0.995
+        validation_frequency = min(n_train_batches, patience / 2)
+        test_score = 0.
+        best_validation_loss = np.inf
+
+        print('Going to run the finetuning training with floatX=%s' % (theano.config.floatX))
+        for epoch in range(finetune_training_epochs):
+            epoch_start = time.time()
+            for minibatch_index in range(n_train_batches):
+                finetune_train_model(minibatch_index)
+                iteration = epoch*n_train_batches + minibatch_index
+                if (iteration + 1) % validation_frequency == 0.:
+                    validation_cost = np.mean([validation_model(i) for i in range(n_validation_batches)])
+                    print('epoch %i, validation error %f %%' % (epoch, validation_cost * 100.))
+                    if validation_cost < best_validation_loss:
+                        if validation_cost < best_validation_loss*improvement_threshold:
+                            patience = max(patience, iteration*patience_increase)
+                        best_validation_loss = validation_cost
+                        test_score = np.mean([test_model(i) for i in range(n_test_batches)])
+                        print('  epoch %i, minibatch test error of best model %f %%' % (epoch, test_score * 100.))
+                if patience <= iteration:
+                    return epoch, best_validation_loss, test_score
+            print(' - finished epoch %d out of %d in %.1fs' %
+                  (epoch, finetune_training_epochs, time.time() - epoch_start))
+        return epoch, best_validation_loss, test_score
+
+    epoch, best_validation_loss, test_score = main_loop()
 
     total_time = time.time()-start_time
-    print('The training code run %.1fs, for %d epochs, for with %f epochs/sec' % (total_time, epoch, epoch/total_time))
-
-    filters = tile_raster_images(X=params[0].get_value(borrow=True).T,
-                                 img_shape=(28, 28), tile_shape=(23, 22),
-                                 tile_spacing=(1, 1))
-    filters = cv2.resize(filters, dsize=None, fx=1., fy=1.)
-    cv2.imshow('filters', filters)
-    cv2.waitKey(-1)
+    print('Optimization complete in %.1fs with best validation score of %f %%, with test performance %f %%' %
+          (total_time, best_validation_loss * 100., test_score * 100.))
+    print('The code run for %d epochs, with %f epochs/sec' % (epoch, epoch/total_time))
 
 
 if __name__ == "__main__":
-    run_4_stacked_autoencoder(corruption_level=0.3)
+    run_4_stacked_autoencoder()
+    '''
+    No pretraining:
+Optimization complete in 1478.6s with best validation score of 1.960000 %, with test performance 2.130000 %
+The code run for 15 epochs, with 0.010145 epochs/sec
+    '''
