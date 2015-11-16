@@ -104,6 +104,8 @@ class RBM(object):
             updates[p] = p - T.cast(learning_rate, theano.config.floatX)*gradient
 
         if persistent_state is None:
+            # here we use linear_visible_activations because theano can not make log(scan(sigm(..))) stable,
+            # but it can make log(sigm(..)) stable.
             monitoring_cost = mean_cross_entropy(T.nnet.sigmoid(linear_visible_activations[-1]), input)
         else:
             updates[persistent_state] = hidden_samples[-1]
@@ -152,10 +154,11 @@ def run_5_rbm():
     n_training_epochs = 1 #15
     n_visible=28*28
     n_hidden=500
+    n_contrastive_divergence_steps=15
 
+    # for sampling from trained model
     n_chains = 20
-    n_samples = 10
-    n_contrastive_divergence_steps=1
+    n_samples = 2
     rng = np.random.RandomState(123)
     theano_rng = RandomStreams(rng.randint(2 ** 30))
 
