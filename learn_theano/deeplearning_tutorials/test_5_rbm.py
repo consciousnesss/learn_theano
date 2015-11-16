@@ -98,7 +98,7 @@ class RBM(object):
         (visible_samples, visible_activations, linear_visible_activations,
          hidden_samples, hidden_activations, hidden_linear_activations), updates = theano.scan(
             fn=lambda x: self.gibbs_update_hidden_visible_hidden(x, theano_rng),
-            outputs_info=[None, None, None, None, None, chain_start],
+            outputs_info=[None, None, None, chain_start, None, None],
             n_steps=number_of_gibbs_steps
         )
         visible_chain_end = visible_samples[-1]
@@ -161,11 +161,11 @@ def train_rbm():
 
     batch_size = 20
     learning_rate = 0.1
-    n_training_epochs = 1 #15
+    n_training_epochs = 5*17 #15
     n_visible=28*28
     n_hidden=500
-    n_contrastive_divergence_steps=15
-    persistent_contrastive_divergence=False
+    n_contrastive_divergence_steps=1
+    persistent_contrastive_divergence=True
 
     rng = np.random.RandomState(123)
     theano_rng = RandomStreams(rng.randint(2 ** 30))
@@ -204,13 +204,9 @@ def train_rbm():
 
     for epoch in range(n_training_epochs):
         epoch_start_time = time.time()
-        batch_start_time = epoch_start_time
         costs = []
         for batch_index in range(n_train_batches):
             costs.append(train_rbm(batch_index))
-            if batch_index % 100 == 0:
-                print('Done batch %d of %d. Took %.4fs' % (batch_index, n_train_batches, time.time() - batch_start_time))
-                batch_start_time = time.time()
         print('Training epoch %d of %d, cost is %f, took %.1fs' %
               (epoch, n_training_epochs, np.mean(costs), time.time() - epoch_start_time))
     filters = tile_raster_images(X=rbm.W.get_value(borrow=True).T, img_shape=(28, 28))
@@ -226,8 +222,8 @@ def train_rbm():
 def sample_from_trained_rbm(w_init, b_hidden_init, b_visible_init):
 
     # for sampling from trained model
-    n_chains = 10
-    n_samples = 2
+    n_chains = 20
+    n_samples = 10
 
     mnist_pkl = get_dataset('mnist')
     with open(mnist_pkl) as f:
@@ -254,7 +250,7 @@ def sample_from_trained_rbm(w_init, b_hidden_init, b_visible_init):
     (hidden_samples, hidden_activations, hidden_linear_activations,
      visible_samples, visible_activations, linear_visible_activations), sampling_updates = theano.scan(
         fn=lambda x: rbm.gibbs_update_visible_hidden_visible(x, theano_rng),
-        outputs_info=[None, None, None, None, None, persistent_vis_chain],
+        outputs_info=[None, None, None, persistent_vis_chain, None, None],
         n_steps=plot_every
     )
 
@@ -275,10 +271,10 @@ def sample_from_trained_rbm(w_init, b_hidden_init, b_visible_init):
     for idx in xrange(n_samples):
         # generate `plot_every` intermediate samples that we discard,
         # because successive samples in the chain are too correlated
-        vis_mf, vis_sample = sample_fn()
+        vis_activations, vis_sample = sample_fn()
         print ' ... plotting sample ', idx
         image_data[29 * idx:29 * idx + 28, :] = tile_raster_images(
-            X=vis_mf,
+            X=vis_activations,
             img_shape=(28, 28),
             tile_shape=(1, n_chains),
             tile_spacing=(1, 1)
@@ -296,12 +292,25 @@ if __name__ == "__main__":
         w_init, b_hidden_init, b_visible_init = train_rbm()
         with open('trained_rbm.pkl', 'w') as f:
             pickle.dump((w_init, b_hidden_init, b_visible_init), f, protocol=pickle.HIGHEST_PROTOCOL)
-    else:
-        with open('trained_rbm.pkl') as f:
-            w_init, b_hidden_init, b_visible_init = pickle.load(f)
-        sample_from_trained_rbm(w_init, b_hidden_init, b_visible_init)
+
+    with open('trained_rbm.pkl') as f:
+        w_init, b_hidden_init, b_visible_init = pickle.load(f)
+    sample_from_trained_rbm(w_init, b_hidden_init, b_visible_init)
 
     '''
     Some profiling results:
-    PCD-15, cpu: Training epoch 0 of 1, cost is -69.220871, took 126.6s
+    PCD-15, cpu: Training epoch 0 of 1, cost is -32.710491, took 173.8s
+    PCD-1, cpu: Training epoch 0 of 1, cost is -7.949985, took 10.5s
+    CD-15 cpu: Training epoch 0 of 1, cost is 220.957275, took 174.5s
+    CD-1, cpu: Training epoch 0 of 1, cost is 94.514465, took 9.8s
+
+    CD-1 for 17 iterations comparing to PCD-15 1 iteration(the same time) leads to better receptive fields but,
+        really bad samples.
+    PCD-1 for 17 iterations is comparable with PCD-15 for 1 iteration.
+    CD-15 for 1 iterations generates way worse samples than PCD-15
+    Result 1:
+        Persistent CD seems always better taking the same time.
+
+    PCD-15 for 5 iterations, 15 min, cost -14.856175
+    PCD-1 for 15 minutes, 15 min, -6.587661, took 10.6s
     '''
