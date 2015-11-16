@@ -8,6 +8,9 @@ import numpy as np
 scan is the theano construct that allows you to do recursions and loops.
 function that is passed to scan has the following order of arguments:
 sequences (if any), prior result(s) (if needed), non-sequences (if any)
+Prior results are specified in outputs_info. If some are None, then they are not fed to the function,
+but are accumulated from function output.
+In this case function returns more values than takes, only part of the return is necessary for the next computation.
 '''
 
 
