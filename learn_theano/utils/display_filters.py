@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def tile_raster_images(X, img_shape, tile_shape, tile_spacing=(0, 0),
+def tile_raster_images(X, img_shape, tile_shape=None, tile_spacing=(1, 1),
                        scale_rows_to_unit_interval=True):
     """
     Transform an array with one flattened image per row, into an array in
@@ -31,6 +31,9 @@ def tile_raster_images(X, img_shape, tile_shape, tile_spacing=(0, 0),
     """
 
     assert len(img_shape) == 2
+    assert np.prod(img_shape) == X.shape[1]
+    if tile_shape is None:
+        tile_shape=(int(np.sqrt(X.shape[0]))+1, int(np.sqrt(X.shape[0]))+1)
     assert len(tile_shape) == 2
     assert len(tile_spacing) == 2
 
