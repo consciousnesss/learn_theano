@@ -92,7 +92,7 @@ class RBM(object):
 
     def get_cost_updates(self, input, learning_rate, number_of_gibbs_steps, theano_rng, persistent_state):
         if persistent_state is None:
-            chain_start = self.sample_hidden_given_visible(input, theano_rng)
+            chain_start, _, _ = self.sample_hidden_given_visible(input, theano_rng)
         else:
             chain_start = persistent_state
         (visible_samples, visible_activations, linear_visible_activations,
@@ -165,6 +165,7 @@ def train_rbm():
     n_visible=28*28
     n_hidden=500
     n_contrastive_divergence_steps=15
+    persistent_contrastive_divergence=False
 
     rng = np.random.RandomState(123)
     theano_rng = RandomStreams(rng.randint(2 ** 30))
@@ -175,8 +176,11 @@ def train_rbm():
 
     x = T.matrix('x')
 
-    persistent_chain = theano.shared(
-        np.zeros((batch_size, n_hidden), dtype=theano.config.floatX), borrow=True)
+    if persistent_contrastive_divergence:
+        persistent_chain = theano.shared(
+            np.zeros((batch_size, n_hidden), dtype=theano.config.floatX), borrow=True)
+    else:
+        persistent_chain = None
 
     rbm = RBM.create_with_random_weights(n_visible, n_hidden, rng)
 
@@ -296,3 +300,8 @@ if __name__ == "__main__":
         with open('trained_rbm.pkl') as f:
             w_init, b_hidden_init, b_visible_init = pickle.load(f)
         sample_from_trained_rbm(w_init, b_hidden_init, b_visible_init)
+
+    '''
+    Some profiling results:
+    PCD-15, cpu: Training epoch 0 of 1, cost is -69.220871, took 126.6s
+    '''
