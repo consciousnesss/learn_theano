@@ -30,26 +30,32 @@ def load_dataset(dataset):
 
 
 class RBM(object):
-    def __init__(self, n_visible, n_hidden, rng):
-        w_init = rng.uniform(
-            low=-4*np.sqrt(6./(n_visible + n_hidden)),
-            high=4*np.sqrt(6./(n_visible + n_hidden)),
-            size=(n_visible, n_hidden))
+    def __init__(self, w_init, b_hidden_init, b_visible_init):
         self.W = theano.shared(
             np.asarray(w_init, dtype=theano.config.floatX),
             name='W',
             borrow=True)
         self.b_hidden = theano.shared(
-            np.zeros((n_hidden,), dtype=theano.config.floatX),
+            np.asarray(b_hidden_init, dtype=theano.config.floatX),
             name='b_hidden',
             borrow=True
         )
-
         self.b_visible = theano.shared(
-            np.zeros((n_visible,), dtype=theano.config.floatX),
+            np.asarray(b_visible_init, dtype=theano.config.floatX),
             name='b_visible',
             borrow=True
         )
+
+    @staticmethod
+    def create_with_random_weights(n_visible, n_hidden, rng):
+        w_init = rng.uniform(
+            low=-4*np.sqrt(6./(n_visible + n_hidden)),
+            high=4*np.sqrt(6./(n_visible + n_hidden)),
+            size=(n_visible, n_hidden))
+
+        return RBM(w_init,
+                   np.zeros((n_hidden,), dtype=theano.config.floatX),
+                   np.zeros((n_visible,), dtype=theano.config.floatX))
 
     def sample_hidden_given_visible(self, visible, theano_rng):
         hidden_linear_activations = T.dot(visible, self.W)+self.b_hidden
@@ -142,9 +148,13 @@ class RBM(object):
 
         return cost
 
+    def get_parameter_values(self):
+        return (self.W.get_value(borrow=True),
+                self.b_hidden.get_value(borrow=True),
+                self.b_visible.get_value(borrow=True))
 
 
-def run_5_rbm():
+def train_rbm():
     mnist_pkl = get_dataset('mnist')
     with open(mnist_pkl) as f:
         train_set, valid_set, test_set = pickle.load(f)
@@ -156,9 +166,6 @@ def run_5_rbm():
     n_hidden=500
     n_contrastive_divergence_steps=15
 
-    # for sampling from trained model
-    n_chains = 20
-    n_samples = 2
     rng = np.random.RandomState(123)
     theano_rng = RandomStreams(rng.randint(2 ** 30))
 
@@ -171,7 +178,7 @@ def run_5_rbm():
     persistent_chain = theano.shared(
         np.zeros((batch_size, n_hidden), dtype=theano.config.floatX), borrow=True)
 
-    rbm = RBM(n_visible, n_hidden, rng)
+    rbm = RBM.create_with_random_weights(n_visible, n_hidden, rng)
 
     #persistent contrastive divergence with n_contrastive_divergence_steps steps
     cost, updates = rbm.get_cost_updates(
@@ -193,22 +200,40 @@ def run_5_rbm():
 
     for epoch in range(n_training_epochs):
         epoch_start_time = time.time()
+        batch_start_time = epoch_start_time
         costs = []
         for batch_index in range(n_train_batches):
-            batch_start_time = time.time()
             costs.append(train_rbm(batch_index))
-            print('Done batch %d of %d. Took %.4fs' % (batch_index, n_train_batches, time.time() - batch_start_time))
+            if batch_index % 100 == 0:
+                print('Done batch %d of %d. Took %.4fs' % (batch_index, n_train_batches, time.time() - batch_start_time))
+                batch_start_time = time.time()
         print('Training epoch %d of %d, cost is %f, took %.1fs' %
               (epoch, n_training_epochs, np.mean(costs), time.time() - epoch_start_time))
-        filters = tile_raster_images(X=rbm.W.get_value(borrow=True).T, img_shape=(28, 28))
-        cv2.imshow('filter', filters)
-        cv2.waitKey(-1)
+    filters = tile_raster_images(X=rbm.W.get_value(borrow=True).T, img_shape=(28, 28))
+    cv2.imshow('filter', filters)
+    cv2.waitKey(-1)
+    cv2.destroyWindow('filter')
 
-    print ('Training took %d minutes' % (time.time()-start_time/60.))
+    print ('Training took %d minutes' % ((time.time()-start_time)/60.))
 
+    return rbm.get_parameter_values()
+
+
+def sample_from_trained_rbm(w_init, b_hidden_init, b_visible_init):
+
+    # for sampling from trained model
+    n_chains = 10
+    n_samples = 2
+
+    mnist_pkl = get_dataset('mnist')
+    with open(mnist_pkl) as f:
+        train_set, valid_set, test_set = pickle.load(f)
+
+    test_set_x, _ = load_dataset(test_set)
     # sample from trained RBM
     number_of_test_samples = test_set_x.get_value(borrow=True).shape[0]
     # pick random test examples, with which to initialize the persistent chain
+    rng = np.random.RandomState(123)
     test_idx = rng.randint(number_of_test_samples - n_chains)
     persistent_vis_chain = theano.shared(
         np.asarray(
@@ -217,7 +242,11 @@ def run_5_rbm():
         )
     )
 
+    theano_rng = RandomStreams(rng.randint(2 ** 30))
     plot_every = 1000
+
+    rbm = RBM(w_init, b_hidden_init, b_visible_init)
+
     (hidden_samples, hidden_activations, hidden_linear_activations,
      visible_samples, visible_activations, linear_visible_activations), sampling_updates = theano.scan(
         fn=lambda x: rbm.gibbs_update_visible_hidden_visible(x, theano_rng),
@@ -251,10 +280,19 @@ def run_5_rbm():
             tile_spacing=(1, 1)
         )
 
+    image_data = cv2.resize(image_data, dsize=None, fx=2., fy=2.)
     cv2.imshow('sampling', image_data)
     cv2.waitKey(-1)
 
 
 
 if __name__ == "__main__":
-    run_5_rbm()
+    train = True
+    if train:
+        w_init, b_hidden_init, b_visible_init = train_rbm()
+        with open('trained_rbm.pkl', 'w') as f:
+            pickle.dump((w_init, b_hidden_init, b_visible_init), f, protocol=pickle.HIGHEST_PROTOCOL)
+    else:
+        with open('trained_rbm.pkl') as f:
+            w_init, b_hidden_init, b_visible_init = pickle.load(f)
+        sample_from_trained_rbm(w_init, b_hidden_init, b_visible_init)
