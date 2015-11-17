@@ -161,10 +161,10 @@ def train_rbm():
 
     batch_size = 20
     learning_rate = 0.1
-    n_training_epochs = 5*17 #15
+    n_training_epochs = 15
     n_visible=28*28
     n_hidden=500
-    n_contrastive_divergence_steps=1
+    n_contrastive_divergence_steps=15
     persistent_contrastive_divergence=True
 
     rng = np.random.RandomState(123)
@@ -310,7 +310,17 @@ if __name__ == "__main__":
     CD-15 for 1 iterations generates way worse samples than PCD-15
     Result 1:
         Persistent CD seems always better taking the same time.
+    Result 2:
+        Cost function values seems have different scales for different number of iterations
 
     PCD-15 for 5 iterations, 15 min, cost -14.856175
     PCD-1 for 15 minutes, 15 min, -6.587661, took 10.6s
+
+    Result 3:
+        If the same amount of time is spent, number of gibbs samples doesn't seem to change performance much
+
+    PCD-15 for 15 iterations - 80 minutes - nice results
+    PCD-15 for 50 iterations - worse results. Networks seems to dream only about 8s and zeros.
+    Result 4:
+        It seems it is possible to overtrain the network.
     '''
