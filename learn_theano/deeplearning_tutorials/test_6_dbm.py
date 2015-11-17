@@ -169,8 +169,7 @@ class RBM(object):
 
         # equivalent to e^(-FE(x_i)) / (e^(-FE(x_i)) + e^(-FE(x_{\i})))
         n_visible = self.b_visible.get_value(borrow=True).shape[0]
-        cost = T.mean(n_visible * T.log(T.nnet.sigmoid(fe_xi_flip -
-                                                            fe_xi)))
+        cost = T.mean(n_visible * T.log(T.nnet.sigmoid(fe_xi_flip - fe_xi)))
 
         # increment bit_i_idx % number as part of updates
         updates[bit_i_idx] = (bit_i_idx + 1) % n_visible
@@ -187,7 +186,7 @@ def train_dbn():
     finetune_learning_rate = 0.1
     pretrain_learning_rate = 0.01
     n_pretraining_epochs = 100
-    n_finetune_training_epochs = 100 #000
+    n_finetune_training_epochs = 100
     n_in=28*28
     n_out=10
     hidden_layers_sizes=[1000, 1000, 1000]

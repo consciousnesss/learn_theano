@@ -140,8 +140,7 @@ class RBM(object):
 
         # equivalent to e^(-FE(x_i)) / (e^(-FE(x_i)) + e^(-FE(x_{\i})))
         n_visible = self.b_visible.get_value(borrow=True).shape[0]
-        cost = T.mean(n_visible * T.log(T.nnet.sigmoid(fe_xi_flip -
-                                                            fe_xi)))
+        cost = T.mean(n_visible * T.log(T.nnet.sigmoid(fe_xi_flip - fe_xi)))
 
         # increment bit_i_idx % number as part of updates
         updates[bit_i_idx] = (bit_i_idx + 1) % n_visible
@@ -184,7 +183,7 @@ def train_rbm():
 
     rbm = RBM.create_with_random_weights(n_visible, n_hidden, rng)
 
-    #persistent contrastive divergence with n_contrastive_divergence_steps steps
+    # persistent contrastive divergence with n_contrastive_divergence_steps steps
     cost, updates = rbm.get_cost_updates(
         x, learning_rate, number_of_gibbs_steps=n_contrastive_divergence_steps,
         theano_rng=theano_rng, persistent_state=persistent_chain)
@@ -283,7 +282,6 @@ def sample_from_trained_rbm(w_init, b_hidden_init, b_visible_init):
     image_data = cv2.resize(image_data, dsize=None, fx=2., fy=2.)
     cv2.imshow('sampling', image_data)
     cv2.waitKey(-1)
-
 
 
 if __name__ == "__main__":
