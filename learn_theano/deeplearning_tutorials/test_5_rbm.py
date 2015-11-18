@@ -154,10 +154,6 @@ class RBM(object):
 
 
 def train_rbm():
-    mnist_pkl = get_dataset('mnist')
-    with open(mnist_pkl) as f:
-        train_set, valid_set, test_set = pickle.load(f)
-
     batch_size = 20
     learning_rate = 0.1
     n_training_epochs = 15
@@ -169,6 +165,7 @@ def train_rbm():
     rng = np.random.RandomState(123)
     theano_rng = RandomStreams(rng.randint(2 ** 30))
 
+    train_set, valid_set, test_set = get_dataset('mnist')
     train_set_x, _ = load_dataset(train_set)
     test_set_x, _ = load_dataset(test_set)
     n_train_batches = train_set_x.get_value(borrow=True).shape[0]/batch_size

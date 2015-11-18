@@ -87,10 +87,6 @@ def autoencoder(input, W, b_hidden):
 
 
 def run_4_stacked_autoencoder():
-    mnist_pkl = get_dataset('mnist')
-    with open(mnist_pkl) as f:
-        train_set, valid_set, test_set = pickle.load(f)
-
     batch_size = 1
     finetune_learning_rate = 0.1
     finetune_training_epochs = 50
@@ -104,6 +100,7 @@ def run_4_stacked_autoencoder():
     rng = np.random.RandomState(89677)
     theano_rng = RandomStreams(rng.randint(2 ** 30))
 
+    train_set, valid_set, test_set = get_dataset('mnist')
     train_set_x, train_set_y = load_dataset(train_set)
     valid_set_x, valid_set_y = load_dataset(valid_set)
     test_set_x, test_set_y = load_dataset(test_set)

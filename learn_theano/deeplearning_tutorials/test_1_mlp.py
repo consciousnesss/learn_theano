@@ -54,9 +54,6 @@ def hidden_layer(input, n_in, n_out, rng):
 
 
 def run_1_mlp():
-    mnist_pkl = get_dataset('mnist')
-    with open(mnist_pkl) as f:
-        train_set, valid_set, test_set = pickle.load(f)
 
     batch_size = 20
     learning_rate = 0.01
@@ -68,6 +65,7 @@ def run_1_mlp():
     n_out=10
     rng = np.random.RandomState(1234)
 
+    train_set, valid_set, test_set = get_dataset('mnist')
     train_set_x, train_set_y = load_dataset(train_set)
     valid_set_x, valid_set_y = load_dataset(valid_set)
     test_set_x, test_set_y = load_dataset(test_set)

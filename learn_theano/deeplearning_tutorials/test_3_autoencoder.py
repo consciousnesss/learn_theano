@@ -47,10 +47,6 @@ def autoencoder(input, n_visible, n_hidden, rng):
 
 
 def run_3_denoising_autoencoder(corruption_level=0.3):
-    mnist_pkl = get_dataset('mnist')
-    with open(mnist_pkl) as f:
-        train_set, _, _ = pickle.load(f)
-
     batch_size = 20
     learning_rate = 0.01
     training_epochs = 250
@@ -59,6 +55,7 @@ def run_3_denoising_autoencoder(corruption_level=0.3):
     rng = np.random.RandomState(123)
     theano_rng = RandomStreams(rng.randint(2 ** 30))
 
+    train_set, _, _ = get_dataset('mnist')
     train_set_x, train_set_y = load_dataset(train_set)
 
     n_train_batches = train_set_x.get_value(borrow=True).shape[0]/batch_size
