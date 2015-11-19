@@ -328,7 +328,6 @@ def run_7_lstm_training():
                 cost = f_grad_shared(current_x, current_mask, current_y)
                 f_update(lrate)
 
-
                 if uidx % dispFreq == 0:
                     print 'Epoch ', eidx, 'Update ', uidx, 'Cost ', cost
 
@@ -347,7 +346,7 @@ def run_7_lstm_training():
                            'Test ', test_err)
 
                     if (len(history_errs) > patience and
-                        valid_err >= np.array(history_errs)[:-patience, 0].min()):
+                            valid_err >= np.array(history_errs)[:-patience, 0].min()):
                         bad_counter += 1
                         if bad_counter > patience:
                             print 'Early Stop!'
@@ -378,3 +377,21 @@ def run_7_lstm_training():
 
 if __name__ == '__main__':
     run_7_lstm_training()
+
+    '''
+    Results:
+    Epoch  69 Update  8880 Cost  4.28049634138e-06
+('Train ', 0.0, 'Valid ', 0.57943925233644866, 'Test ', 0.20799999999999996)
+Early Stop!
+Seen 768 samples
+Train  0.0 Valid  0.579439252336 Test  0.208
+The code run for 70 epochs, with 14.774699 sec/epochs
+Training took 1034.2s
+
+    Lessons:
+     - there are non-trivial optimizers such as ADADELTA that perform better than SGD
+     - there are complications if you use datasets with varying sample size: you need to pad etc.
+     - orthogonal weights initialization
+     - randomizing batches on each epoch
+     - concatenate all weights of LSTM cells
+    '''

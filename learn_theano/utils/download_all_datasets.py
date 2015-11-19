@@ -11,10 +11,8 @@ datasets = {
 
 
 def download_all_datasets():
-    filenames = []
     for d in datasets:
-        filenames.append(get_dataset(d))
-    print("Downloaded the following datasets: %s" % (filenames,))
+        get_dataset(d)
 
 
 def get_dataset(name):
