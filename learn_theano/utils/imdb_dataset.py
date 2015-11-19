@@ -2,6 +2,7 @@ from learn_theano.utils.s3_download import S3
 import cPickle
 
 import numpy as np
+import os
 
 
 def get_original_imdb_pkl():
@@ -19,7 +20,8 @@ def get_imdb_number_to_words_dict():
     return {v: k for k, v in forward.iteritems()}
 
 
-def load_full_imdb(vocabulary_size=10000, validation_portion=0.05, maximum_sequence_length=100):
+def load_full_imdb(vocabulary_size=10000, validation_portion=0.05, maximum_sequence_length=100,
+                   test_set_size=500):
     '''
     imdb dataset processed by this function with default parameters is uploaded to S3: imdb_filtered.pkl.gz
     '''
@@ -48,6 +50,8 @@ def load_full_imdb(vocabulary_size=10000, validation_portion=0.05, maximum_seque
     valid_inputs, valid_labels = train_inputs[-n_validation:], train_labels[-n_validation:]
     train_inputs, train_labels = train_inputs[:-n_validation], train_labels[:-n_validation]
 
+    test_inputs, test_labels = test_inputs[:test_set_size], test_labels[:test_set_size]
+
     def sort_by_length(seq):
         return sorted(range(len(seq)), key=lambda x: len(seq[x]))
 
@@ -71,4 +75,7 @@ def load_full_imdb(vocabulary_size=10000, validation_portion=0.05, maximum_seque
 
 
 if __name__ == "__main__":
-    load_full_imdb()
+    train_set, valid_set, test_set = load_full_imdb()
+    print(len(train_set[0]), len(valid_set[0]), len(test_set[0]))
+    with open(os.path.expanduser('~/imdb_filtered.pkl'), 'w') as f:
+        cPickle.dump((train_set, valid_set, test_set), f, cPickle.HIGHEST_PROTOCOL)
