@@ -1,4 +1,4 @@
-from learn_theano.utils.midi_nottingham_dataset import get_nottingham_midi_folder
+from learn_theano.utils.midi_nottingham_dataset import get_nottingham_dataset
 from learn_theano.utils.s3_download import S3
 import os
 import cv2
@@ -8,7 +8,7 @@ import cPickle
 datasets = {
     'mnist': lambda: get_standard_pickled_dataset('datasets/mnist.pkl.gz'),
     'imdb': lambda: get_standard_pickled_dataset('datasets/imdb_filtered.pkl.gz'),
-    'nottingham': get_nottingham_midi_folder
+    'nottingham': get_nottingham_dataset
 }
 
 
