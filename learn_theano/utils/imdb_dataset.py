@@ -35,10 +35,10 @@ def load_full_imdb(vocabulary_size=10000, validation_portion=0.05, maximum_seque
     test_inputs, test_labels = test_set
 
     valid_sequences = [i for i, x in enumerate(train_inputs) if len(x) <= maximum_sequence_length]
-    train_inputs, train_labels = np.array(train_inputs)[valid_sequences],  np.array(train_labels)[valid_sequences]
+    train_inputs, train_labels = np.array(train_inputs)[valid_sequences], np.array(train_labels)[valid_sequences]
 
     valid_sequences = [i for i, x in enumerate(test_inputs) if len(x) <= maximum_sequence_length]
-    test_inputs, test_labels = np.array(test_inputs)[valid_sequences],  np.array(test_labels)[valid_sequences]
+    test_inputs, test_labels = np.array(test_inputs)[valid_sequences], np.array(test_labels)[valid_sequences]
 
     def filter_words(x):
         return [[1 if w >= vocabulary_size else w for w in sequence] for sequence in x]
