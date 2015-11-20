@@ -101,8 +101,7 @@ def build_rnnrbm(n_visible, n_hidden, n_hidden_recurrent, params):
         bh_t = bh + T.dot(current_hidden_u, Wuh)
         generate = current_visible is None
         if generate:
-            current_visible, _, _, updates = build_rbm(T.zeros((n_visible,)), W, bv_t,
-                                                     bh_t, k=1)
+            current_visible, _, _, updates = build_rbm(T.zeros((n_visible,)), W, bv_t, bh_t, k=1)
         hidden_u = T.tanh(bu + T.dot(current_visible, Wvu) + T.dot(current_hidden_u, Wuu))
         if generate:
             return ([current_visible, hidden_u], updates)
@@ -237,5 +236,11 @@ def run_rnn_rbm_generation(trained_model_filename):
 
 if __name__ == "__main__":
     trained_model_filename = 'trained_rnn_rbm_params_100_500hidden.pkl'
-    #run_rnn_rbm_training(trained_model_filename, reuse_pretrained=False, num_epochs=100)
+    run_rnn_rbm_training(trained_model_filename, reuse_pretrained=False, num_epochs=100)
     run_rnn_rbm_generation(trained_model_filename)
+    '''
+    - Generated music is not so good - its atonal and doesn't have a structure.
+    - Decreasing number of gibbs samples for RBM doesn't worsen the results but makes it 3 times faster.
+    - This tutorial quite nicelly structures objects and layer building functions.
+    - RBM code is the simplest in this tutorial but suffers from inf. cost values (doesn't affect learning)
+    '''
