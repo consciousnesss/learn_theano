@@ -178,10 +178,6 @@ class RBM(object):
 
 
 def train_dbn():
-    mnist_pkl = get_dataset('mnist')
-    with open(mnist_pkl) as f:
-        train_set, valid_set, test_set = pickle.load(f)
-
     batch_size = 10
     finetune_learning_rate = 0.1
     pretrain_learning_rate = 0.01
@@ -196,6 +192,7 @@ def train_dbn():
     rng = np.random.RandomState(123)
     theano_rng = RandomStreams(rng.randint(2 ** 30))
 
+    train_set, valid_set, test_set = get_dataset('mnist')
     train_set_x, train_set_y = load_dataset(train_set)
     valid_set_x, valid_set_y = load_dataset(valid_set)
     test_set_x, test_set_y = load_dataset(test_set)

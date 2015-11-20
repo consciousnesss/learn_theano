@@ -1,22 +1,24 @@
 from learn_theano.utils.s3_download import S3
 import os
 import cv2
+import cPickle
 
 
 datasets = {
-    'mnist': 'datasets/mnist.pkl.gz'
+    'mnist': 'datasets/mnist.pkl.gz',
+    'imdb': 'datasets/imdb_filtered.pkl.gz'
 }
 
 
 def download_all_datasets():
-    filenames = []
     for d in datasets:
-        filenames.append(get_dataset(d))
-    print("Downloaded the following datasets: %s" % (filenames,))
+        get_dataset(d)
 
 
 def get_dataset(name):
-    return S3().download(datasets[name])
+    filename = S3().download(datasets[name])
+    with open(filename) as f:
+        return cPickle.load(f)
 
 
 def get_3_wolves_image():

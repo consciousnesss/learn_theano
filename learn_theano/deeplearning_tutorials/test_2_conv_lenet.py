@@ -138,10 +138,6 @@ def run_conv_net_image_filtering():
 
 
 def run_2_lenet_training():
-    mnist_pkl = get_dataset('mnist')
-    with open(mnist_pkl) as f:
-        train_set, valid_set, test_set = pickle.load(f)
-
     batch_size = 500
     learning_rate = 0.1
     n_epochs = 200
@@ -150,6 +146,7 @@ def run_2_lenet_training():
     rng = np.random.RandomState(23455)
     number_of_kernels = [20, 50]
 
+    train_set, valid_set, test_set = get_dataset('mnist')
     train_set_x, train_set_y = load_dataset(train_set)
     valid_set_x, valid_set_y = load_dataset(valid_set)
     test_set_x, test_set_y = load_dataset(test_set)
