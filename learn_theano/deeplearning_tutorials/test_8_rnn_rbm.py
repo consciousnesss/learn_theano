@@ -1,11 +1,15 @@
 
 import numpy as np
 import theano
+import os
 import theano.tensor as T
+from learn_theano.utils.play_midi import play_midi
 from learn_theano.utils.download_all_datasets import get_dataset
 from learn_theano.utils.midi.utils import midiread, midiwrite
 from theano.tensor.shared_randomstreams import RandomStreams
 import matplotlib.pylab as plots
+import cPickle
+import time
 
 
 np.random.seed(0xbeef)
@@ -73,17 +77,19 @@ def shared_normal(num_rows, num_cols, scale=1):
         scale=scale, size=(num_rows, num_cols)).astype(theano.config.floatX))
 
 
-def build_rnnrbm(n_visible, n_hidden, n_hidden_recurrent):
-    W = shared_normal(n_visible, n_hidden, 0.01)
-    bv = theano.shared(np.zeros((n_visible), dtype=theano.config.floatX))
-    bh = theano.shared(np.zeros((n_hidden), dtype=theano.config.floatX))
-    Wuh = shared_normal(n_hidden_recurrent, n_hidden, 0.0001)
-    Wuv = shared_normal(n_hidden_recurrent, n_visible, 0.0001)
-    Wvu = shared_normal(n_visible, n_hidden_recurrent, 0.0001)
-    Wuu = shared_normal(n_hidden_recurrent, n_hidden_recurrent, 0.0001)
-    bu = theano.shared(np.zeros((n_hidden_recurrent), dtype=theano.config.floatX))
-
-    params = W, bv, bh, Wuh, Wuv, Wvu, Wuu, bu
+def build_rnnrbm(n_visible, n_hidden, n_hidden_recurrent, params):
+    if params is None:
+        W = shared_normal(n_visible, n_hidden, 0.01)
+        bv = theano.shared(np.zeros((n_visible), dtype=theano.config.floatX))
+        bh = theano.shared(np.zeros((n_hidden), dtype=theano.config.floatX))
+        Wuh = shared_normal(n_hidden_recurrent, n_hidden, 0.0001)
+        Wuv = shared_normal(n_hidden_recurrent, n_visible, 0.0001)
+        Wvu = shared_normal(n_visible, n_hidden_recurrent, 0.0001)
+        Wuu = shared_normal(n_hidden_recurrent, n_hidden_recurrent, 0.0001)
+        bu = theano.shared(np.zeros((n_hidden_recurrent), dtype=theano.config.floatX))
+        params = W, bv, bh, Wuh, Wuv, Wvu, Wuu, bu
+    else:
+        W, bv, bh, Wuh, Wuv, Wvu, Wuu, bu = params
 
     v = T.matrix('v')
     # initial hidden values
@@ -96,7 +102,7 @@ def build_rnnrbm(n_visible, n_hidden, n_hidden_recurrent):
         generate = current_visible is None
         if generate:
             current_visible, _, _, updates = build_rbm(T.zeros((n_visible,)), W, bv_t,
-                                                     bh_t, k=25)
+                                                     bh_t, k=1)
         hidden_u = T.tanh(bu + T.dot(current_visible, Wvu) + T.dot(current_hidden_u, Wuu))
         if generate:
             return ([current_visible, hidden_u], updates)
@@ -108,16 +114,15 @@ def build_rnnrbm(n_visible, n_hidden, n_hidden_recurrent):
         sequences=v,
         outputs_info=[u0, None, None],
         non_sequences=params,  # not clear why its needed,
-        n_steps=200
     )
 
-    v_sample, cost, monitor, updates_rbm = build_rbm(v, W, bv_t[:], bh_t[:], k=15)
+    v_sample, cost, monitor, updates_rbm = build_rbm(v, W, bv_t[:], bh_t[:], k=3)
     updates_train.update(updates_rbm)
 
     # function for generation
     (v_t, u_t), updates_generate = theano.scan(
         lambda u_tm1, *_: recurrence(None, u_tm1),
-        outputs_info=[None, u0], non_sequences=params, n_steps=200)
+        outputs_info=[None, u0], non_sequences=params, n_steps=50)
 
     return (v, v_sample, cost, monitor, params, updates_train, v_t,
             updates_generate)
@@ -125,8 +130,9 @@ def build_rnnrbm(n_visible, n_hidden, n_hidden_recurrent):
 
 class RnnRBM(object):
     def __init__(self,
-                 n_hidden=150,
-                 n_hidden_recurrent=100,
+                 network_parameters,
+                 n_hidden=500,
+                 n_hidden_recurrent=500,
                  learning_rate=0.001,
                  pitch_range=(21, 109),
                  midi_sampling_period=0.3):
@@ -139,8 +145,10 @@ class RnnRBM(object):
         (v, v_sample, cost, monitor, params, updates_train, v_t, updates_generate) = build_rnnrbm(
             pitch_range[1] - pitch_range[0],
             n_hidden,
-            n_hidden_recurrent
+            n_hidden_recurrent,
+            network_parameters
         )
+        self._params = params
 
         gradient = T.grad(cost, params, consider_constant=[v_sample])
         updates_train.update(
@@ -157,10 +165,10 @@ class RnnRBM(object):
             updates=updates_generate
         )
 
-
     def train(self, files, batch_size, num_epochs):
         dataset = [midiread(f, self._pitch_range, self._midi_sampling_period).piano_roll.astype(theano.config.floatX)
                    for f in files]
+        start_time = time.time()
         for epoch in xrange(num_epochs):
             np.random.shuffle(dataset)
             costs = []
@@ -171,6 +179,8 @@ class RnnRBM(object):
                     costs.append(cost)
 
             print 'Epoch %i/%i. Costs=%s' % (epoch + 1, num_epochs, np.mean(costs))
+        training_minutes = (time.time() - start_time)/60.
+        print("Training took %.1fmin. %.1fmin per epoch." % (training_minutes, training_minutes/num_epochs))
 
     def generate(self, filename, show=True):
         '''Generate a sample sequence, plot the resulting piano-roll and save
@@ -193,24 +203,39 @@ class RnnRBM(object):
             plots.ylabel('MIDI note number')
             plots.title('generated piano-roll')
 
+    def get_params(self):
+        return self._params
 
-def run_rnn_rbm_training():
-    batch_size = 40
-    num_epochs = 1
 
+def run_rnn_rbm_training(trained_model_filename, reuse_pretrained=False, num_epochs = 1):
+    batch_size = 100
     train_set_files, valid_set_files, test_set_files = get_dataset('nottingham')
 
-    model = RnnRBM()
+    if reuse_pretrained:
+        with open(trained_model_filename, 'r') as f:
+            trained_model_params = cPickle.load(f)
+    else:
+        trained_model_params = None
+
+    model = RnnRBM(network_parameters=trained_model_params)
     model.train(train_set_files, batch_size, num_epochs)
 
-    model.generate('sample1.mid')
-    model.generate('sample2.mid')
+    with open(trained_model_filename, 'w') as f:
+        cPickle.dump(model.get_params(), f, cPickle.HIGHEST_PROTOCOL)
+
+
+def run_rnn_rbm_generation(trained_model_filename):
+    with open(trained_model_filename, 'r') as f:
+        trained_model_params = cPickle.load(f)
+
+    trained_model = RnnRBM(network_parameters=trained_model_params)
+    sample_filename = os.path.join(os.path.dirname(__file__), 'generated_sample1.mid')
+    trained_model.generate(sample_filename)
     plots.show()
+    play_midi(sample_filename)
 
 
 if __name__ == "__main__":
-    '''
-    brew install timidity
-    timidity jigs_simple_chords_45.mid
-    '''
-    run_rnn_rbm_training()
+    trained_model_filename = 'trained_rnn_rbm_params_100_500hidden.pkl'
+    #run_rnn_rbm_training(trained_model_filename, reuse_pretrained=False, num_epochs=100)
+    run_rnn_rbm_generation(trained_model_filename)

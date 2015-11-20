@@ -285,4 +285,7 @@ if __name__ == "__main__":
     Expected results:
     Optimization complete in 5445.7s (90min) with best validation score of 0.900000 %, with test performance 0.930000 %
     The code run for 199 epochs, with 0.036543 epochs/sec
+
+    TODO: try with CuDNN:
+    http://deeplearning.net/software/theano/library/sandbox/cuda/dnn.html
     '''
