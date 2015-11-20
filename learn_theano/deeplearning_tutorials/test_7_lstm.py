@@ -5,8 +5,6 @@ import time
 import theano.tensor as T
 from theano.tensor.shared_randomstreams import RandomStreams
 
-theano.config.floatX = 'float32'
-
 
 def dropout_layer(input, use_noise, theano_rng):
     noise = theano_rng.binomial(input.shape, p=0.5, n=1, dtype=input.dtype)
