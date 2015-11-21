@@ -137,10 +137,11 @@ def run_conv_net_image_filtering():
     plots.show()
 
 
-def run_2_lenet_training():
+def run_2_lenet_training(
+        n_epochs = 200
+):
     batch_size = 500
     learning_rate = 0.1
-    n_epochs = 200
     n_hidden = 500
     n_out=10
     rng = np.random.RandomState(23455)
@@ -254,6 +255,7 @@ def run_2_lenet_training():
             for minibatch_index in range(n_train_batches):
                 batch_start = time.time()
                 train_model(minibatch_index)
+                print('Run training iteration in %.2f' % (time.time() - batch_start))
                 iteration = epoch*n_train_batches + minibatch_index
                 if (iteration + 1) % validation_frequency == 0.:
                     validation_cost = np.mean([validation_model(i) for i in range(n_validation_batches)])
@@ -273,19 +275,23 @@ def run_2_lenet_training():
     total_time = time.time()-start_time
     print('Optimization complete in %.1fs with best validation score of %f %%, with test performance %f %%' %
           (total_time, best_validation_loss * 100., test_score * 100.))
-    print('The code run for %d epochs, with %f epochs/sec' % (epoch, epoch/total_time))
+    print('The code run for %d epochs, with 1 epoch per %d sec' % (epoch+1, total_time/epoch))
 
     with open('trained_lenet.pkl', 'w') as f:
         pickle.dump([p.get_value(borrow=True) for p in all_parameters], f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 if __name__ == "__main__":
-    run_2_lenet_training()
+    run_2_lenet_training(n_epochs=2)
     '''
     Expected results:
     Optimization complete in 5445.7s (90min) with best validation score of 0.900000 %, with test performance 0.930000 %
     The code run for 199 epochs, with 0.036543 epochs/sec
 
-    TODO: try with CuDNN:
+    Trying with CuDNN:
+    cpu - 1 epoch per 234 sec; 1.03sec
+    gpu, no CuDNN -  1 epoch per 57 sec; iteration in 0.25sec
+
+
     http://deeplearning.net/software/theano/library/sandbox/cuda/dnn.html
     '''
