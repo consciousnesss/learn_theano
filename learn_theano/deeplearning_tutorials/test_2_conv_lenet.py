@@ -288,10 +288,15 @@ if __name__ == "__main__":
     Optimization complete in 5445.7s (90min) with best validation score of 0.900000 %, with test performance 0.930000 %
     The code run for 199 epochs, with 0.036543 epochs/sec
 
-    Trying with CuDNN:
-    cpu - 1 epoch per 234 sec; 1.03sec
+    Run with CuDNN:
+    - Apply for developer programm, wait 2 days.
+    - download the archive with cudnn, unzip, copy includes and libs into /Developer/NVIDIA/CUDA-7.5/
+    - docs: http://deeplearning.net/software/theano/library/sandbox/cuda/dnn.html
+    Command to run:
+    THEANO_FLAGS=device=gpu,floatX=float32,optimizer_including=cudnn python test_2_conv_lenet.py
+
+    Results:
+    cpu - 1 epoch per 234 sec; iteration in 1.03sec
     gpu, no CuDNN -  1 epoch per 57 sec; iteration in 0.25sec
-
-
-    http://deeplearning.net/software/theano/library/sandbox/cuda/dnn.html
+    gpu, with CuDNN - 1 epoch per 16 sec, iteration in 0.07sec - 14.6x speed up comparing to CPU
     '''
