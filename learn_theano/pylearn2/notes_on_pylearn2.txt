@@ -1,0 +1,21 @@
+
+Pros:
+ - quite general architecture that is not tailored for a particular algorithm
+ - rich library on most of the popular networks
+ - consice specification in python of standard experiments if one doesn't use YAML
+ - flexible custom coupling between components: if you want to swap components, you implement common function. If you
+    don't want to swap anything you can use your custom interfaces.
+ - uses python and Theano with all its power and speed
+ - well documented code
+
+Cons:
+ - push for using YAML without any benefit in my opinion. Serialization has all python serialization problems, so
+   you could just serialize classes anyway. Model sharing is not so developed like in Caffe, so there is no need in
+   common format. You can achieve the same functionality with plain python - either dicts with functions or with normal
+   code.
+ - RNNs are not well developed, number of modules out of the box seems smaller than for Torch
+ - custom interfaces for components makes it hard to learn: RBMs have different interface from MLPs etc.
+ - there seems to be no active maintainer group anymore so its going to die soon
+ - no pypi package, so you have to mess with installation without reason
+ - datasets have to be downloaded separatelly instead of wrapping download into dataset class.
+ - bloated base classes that rely on methods and properties at the same time
