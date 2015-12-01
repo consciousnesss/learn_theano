@@ -27,7 +27,15 @@ else
     virtualenv $VENV --prompt "(learn_theano)"
 fi
 
+# add pylearn data path to activate
+grep -q -F 'export PYLEARN2_DATA_PATH=$HOME/.pylearn_data' $VENV/bin/activate || echo 'export PYLEARN2_DATA_PATH=$HOME/.pylearn_data' >> $VENV/bin/activate
+
+if [[ "$(uname -s)" == "Darwin" ]]; then
+    grep -q -F 'export PYLEARN2_VIEWER_COMMAND="open -Wn"' $VENV/bin/activate || echo 'export PYLEARN2_VIEWER_COMMAND="open -Wn"' >> $VENV/bin/activate
+fi
+
 source $VENV/bin/activate
+
 
 # install robustus into virtualenv
 pip install -U git+http://github.com/braincorp/robustus.git
@@ -49,3 +57,10 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
 else
     robustus install opencv==2.4.8
 fi
+
+# install pylearn2
+cd $VENV/lib/python2.7/site-packages/
+git clone git://github.com/lisa-lab/pylearn2.git
+cd pylearn2
+python setup.py develop
+cd $DIR
