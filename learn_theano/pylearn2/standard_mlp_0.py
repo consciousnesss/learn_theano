@@ -6,11 +6,10 @@ import pylearn2.costs.cost
 import pylearn2.train_extensions.best_params
 
 from pylearn2.datasets.mnist import MNIST
-from pylearn2.models.mlp import MLP, RectifiedLinear,Softmax
+from pylearn2.models.mlp import MLP, RectifiedLinear, Softmax
 
 
-if __name__ == '__main__':
-
+def standard_mlp_run(max_epochs=10000):
     model = MLP(
         layers=[
             RectifiedLinear(layer_name='h0', dim=500, sparse_init=15),  # sparse_init - 15 random weights per units are not zeros
@@ -44,12 +43,12 @@ if __name__ == '__main__':
                         prop_decrease=0.,
                         N=10
                     ),
-                    pylearn2.termination_criteria.EpochCounter(max_epochs=10000)]),
+                    pylearn2.termination_criteria.EpochCounter(max_epochs=max_epochs)]),
         ),
         extensions=[
             pylearn2.train_extensions.best_params.MonitorBasedSaveBest(
-                 channel_name='valid_y_misclass',
-                 save_path="mlp_3_best.pkl"),
+                channel_name='valid_y_misclass',
+                save_path="mlp_3_best.pkl"),
             pylearn2.training_algorithms.learning_rule.MomentumAdjustor(
                 start=1,
                 saturate=10,
@@ -57,3 +56,7 @@ if __name__ == '__main__':
             )]
     )
     experiment.main_loop()
+
+
+if __name__ == '__main__':
+    standard_mlp_run()

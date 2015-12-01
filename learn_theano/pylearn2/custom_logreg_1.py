@@ -63,7 +63,7 @@ class MyLogisticRegressionCost(DefaultDataSpecsMixin, Cost):
         return loss.mean()
 
 
-if __name__ == '__main__':
+def custom_log_reg_run(max_epochs=50):
     dataset = MNIST(which_set='train', start=0, stop=50000)
 
     experiment = pylearn2.train.Train(
@@ -77,7 +77,11 @@ if __name__ == '__main__':
                 'valid': MNIST(which_set='train', start=50000, stop=60000),
                 'test': MNIST(which_set='test')},
             cost=MyLogisticRegressionCost(),
-            termination_criterion=pylearn2.termination_criteria.EpochCounter(max_epochs=50)
+            termination_criterion=pylearn2.termination_criteria.EpochCounter(max_epochs=max_epochs)
         ),
     )
     experiment.main_loop()
+
+
+if __name__ == '__main__':
+    custom_log_reg_run()

@@ -29,7 +29,6 @@ class MyAutoencoder(Model):
         return [self._W, self._b, self._b_reconstruction]
 
 
-
 class MyAutoencoderCost(DefaultDataSpecsMixin, Cost):
     supervised = False  # cost will not receive labels
 
@@ -43,8 +42,7 @@ class MyAutoencoderCost(DefaultDataSpecsMixin, Cost):
         return loss.mean()
 
 
-
-if __name__ == '__main__':
+def custom_autoencoder_run(max_epochs=50):
     dataset = MNIST(which_set='train', start=0, stop=50000)
 
     experiment = pylearn2.train.Train(
@@ -62,3 +60,7 @@ if __name__ == '__main__':
         ),
     )
     experiment.main_loop()
+
+
+if __name__ == '__main__':
+    custom_autoencoder_run()
