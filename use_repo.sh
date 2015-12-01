@@ -63,4 +63,9 @@ cd $VENV/lib/python2.7/site-packages/
 git clone git://github.com/lisa-lab/pylearn2.git
 cd pylearn2
 python setup.py develop
+# download pylearn MNIST
+python pylearn2/scripts/datasets/download_mnist.py
 cd $DIR
+
+
+
