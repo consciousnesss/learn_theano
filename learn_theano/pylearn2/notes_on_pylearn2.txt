@@ -6,6 +6,7 @@ Pros:
  - flexible custom coupling between components: if you want to swap components, you implement common function. If you
     don't want to swap anything you can use your custom interfaces.
  - uses python and Theano with all its power and speed
+ - well documented code
 
 Cons:
  - push for using YAML without any benefit in my opinion. Serialization has all python serialization problems, so
@@ -17,3 +18,4 @@ Cons:
  - there seems to be no active maintainer group anymore so its going to die soon
  - no pypi package, so you have to mess with installation without reason
  - datasets have to be downloaded separatelly instead of wrapping download into dataset class.
+ - bloated base classes that rely on methods and properties at the same time
