@@ -4,15 +4,12 @@ from learn_theano.pylearn2.standard_mlp_0 import standard_mlp_run
 
 
 def test_standard_mlp():
-    return
-    standard_mlp_run(2)
+    standard_mlp_run(1)
 
 
 def test_custom_log_reg():
-    return
-    custom_log_reg_run(2)
+    custom_log_reg_run(1)
 
 
 def test_custom_autoencoder():
-    return
-    custom_autoencoder_run(2)
+    custom_autoencoder_run(1)

@@ -56,7 +56,7 @@ def custom_autoencoder_run(max_epochs=50):
                 'valid': MNIST(which_set='train', start=50000, stop=60000),
                 'test': MNIST(which_set='test')},
             cost=MyAutoencoderCost(),
-            termination_criterion=pylearn2.termination_criteria.EpochCounter(max_epochs=50)
+            termination_criterion=pylearn2.termination_criteria.EpochCounter(max_epochs=max_epochs)
         ),
     )
     experiment.main_loop()
