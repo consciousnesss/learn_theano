@@ -46,6 +46,9 @@ mkdir -p ~/.robustus_rc/wheelhouse
 # initialize robustus venv with cache path 
 robustus --cache ~/.robustus_rc/wheelhouse env $VENV
 
+# install bleeding edge theano
+pip install git+git://github.com/Theano/Theano.git
+
 # install this folder in developer mode
 echo "Running robustus with options '$ROBUSTUS_OPTIONS'"
 robustus install -e . $ROBUSTUS_OPTIONS
