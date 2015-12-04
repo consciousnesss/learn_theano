@@ -16,7 +16,7 @@ class MyLogisticRegression(Model):
     def __init__(self, n_vis_units, n_classes):
         Model.__init__(self)
 
-        self._W = sharedX(np.random.uniform(size=(n_vis_units, n_classes), dtype=np.float32), 'W')
+        self._W = sharedX(np.random.uniform(size=(n_vis_units, n_classes)).astype(dtype=np.float32), 'W')
         self._b = sharedX(np.zeros(n_classes, dtype=np.float32), 'b')
 
         # base class overrides
