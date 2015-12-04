@@ -36,14 +36,16 @@ def run_bricks_mnist_mlp(n_epochs=10):
     cost = cost + 0.005 * (W1 ** 2).sum() + 0.005 * (W2 ** 2).sum()
     cost.name = 'cost_with_regularization'
 
-    # initialize weights
+    # initialize weights.
+    # If you happened to forget this, you just quitely get nans as output.
+    # If you forgot to initialize only a single layer, you still get nan quietly:)
     input_to_hidden.weights_init = hidden_to_output.weights_init = IsotropicGaussian(0.01)
     input_to_hidden.biases_init = hidden_to_output.biases_init = Constant(0)
     input_to_hidden.initialize()
     hidden_to_output.initialize()
 
     # the following is the shortcut for MLP
-    # mlp = MLP(activations=[Rectifier(), Softmax()], dims=[784, 100, 10]).apply(x)
+    mlp = MLP(activations=[Rectifier(), Softmax()], dims=[784, 100, 10]).apply(x)
     # but it is not clear how to do weight initializations..
 
     mnist = MNIST(("train",))
@@ -69,4 +71,19 @@ def run_bricks_mnist_mlp(n_epochs=10):
 
 
 if __name__ == '__main__':
-    run_bricks_mnist_mlp()
+    run_bricks_mnist_mlp(n_epochs=1)
+    '''
+    Impression:
+     - very verbose API. Its probably as verbose as to write theano directly.
+     - very clumsy API. It feels like you write java - there are 17 imports to run mlp on mnist,
+        there are no containers etc.
+     - explicit model lifecycle (create, configure, initialize etc) which you need to manually perform
+     - parameter initialization is really really crappy. You forget to init one layer - you get silent nans
+      as output
+     - no shape inference
+     - uses Fuel, fuel is verbose and requires unnecessary configuration. Is it so hard to just create a folder
+      in user's home and download data there? Why would user need to download and then convert data?
+     - all client logic (like MLP wrapper) is in __init__.py files. This is just really really strange..
+     - has built in bricks for attention:
+      https://blocks.readthedocs.org/en/latest/api/bricks.html#module-blocks.bricks.attention
+    '''
