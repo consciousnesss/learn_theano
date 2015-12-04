@@ -36,7 +36,6 @@ def run_mnist_conv_net():
 
     # RMSProp works way faster than SGD
     optimizer = 'adadelta'
-    #optimizer = RMSprop()
     model.compile(loss='categorical_crossentropy', optimizer=optimizer)
 
     (X_train, Y_train), (X_test, Y_test) = mnist.load_data()

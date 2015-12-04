@@ -7,7 +7,7 @@ import numpy as np
 from keras.utils import np_utils
 
 
-def run_mlp():
+def run_mlp(n_epochs = 20):
     np.random.seed(1234)
 
     nb_inputs = 28*28
@@ -29,7 +29,7 @@ def run_mlp():
     Y_train = np_utils.to_categorical(Y_train, nb_classes)
     Y_test = np_utils.to_categorical(Y_test, nb_classes)
 
-    model.fit(X_train, Y_train, nb_epoch=20, batch_size=128,
+    model.fit(X_train, Y_train, nb_epoch=n_epochs, batch_size=128,
               show_accuracy=True, verbose=2,
               validation_split=0.1)
     loss, accuracy = model.evaluate(X_test, Y_test,
