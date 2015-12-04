@@ -51,6 +51,24 @@ pip install scipy==0.16.1
 pip install git+git://github.com/Theano/Theano.git@30cc6380863b08a3a90ecbe083ddfb629a56161d
 pip install git+git://github.com/fchollet/keras.git@5956dbe8fad1642f5c6529008fd9126d920b0e76
 
+# install blocks and fuel
+pip install picklable-itertools==0.1.1
+pip install progressbar2==2.7.3
+pip install pyyaml==3.11
+pip install six==1.9.0
+pip install toolz==0.7.2
+
+pip install git+git://github.com/mila-udem/fuel.git
+pip install git+git://github.com/mila-udem/blocks.git
+
+# add path for fuel data
+mkdir -p ~/.fuel_data
+grep -q -F 'export FUEL_DATA_PATH=$HOME/.fuel_data' $VENV/bin/activate || echo 'export FUEL_DATA_PATH=$HOME/.fuel_data' >> $VENV/bin/activate
+cd ~/.fuel_data
+fuel-download mnist
+fuel-convert mnist
+cd -
+
 # install this folder in developer mode
 echo "Running robustus with options '$ROBUSTUS_OPTIONS'"
 robustus install -e . $ROBUSTUS_OPTIONS
