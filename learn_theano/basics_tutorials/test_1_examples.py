@@ -71,7 +71,7 @@ def test_1_logistic_regression():
     N = 400
     features = 784
     training_steps = 2000
-    inputs = np.random.randn(N, features)
+    inputs = np.random.randn(N, features).astype(theano.config.floatX)
     labels = np.random.randint(size=N, low=0, high=2)
 
     x = T.matrix('x')

@@ -11,8 +11,8 @@ def test_4_conditionals():
     f_switch = theano.function([a, b, x, y], T.switch(T.lt(a, b), T.mean(x), T.mean(y)))
     f_lazy_ifelse = theano.function([a, b, x, y], ifelse(T.lt(a, b), T.mean(x), T.mean(y)))
 
-    x_val = np.ones((100, 100))*1
-    y_val = np.ones((100, 100))*2
+    x_val = np.ones((100, 100), dtype=theano.config.floatX)*1
+    y_val = np.ones((100, 100), dtype=theano.config.floatX)*2
 
     # vectorized switch is going to evaluate both options
     np.testing.assert_almost_equal(
