@@ -59,7 +59,7 @@ def run_bricks_mnist_mlp(n_epochs=10):
     data_stream_test = Flatten(DataStream.default_stream(
         mnist_test,
         iteration_scheme=SequentialScheme(
-        mnist_test.num_examples, batch_size=1024)))
+            mnist_test.num_examples, batch_size=1024)))
 
     monitor = DataStreamMonitoring(
         variables=[cost], data_stream=data_stream_test, prefix="test")
