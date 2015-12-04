@@ -46,14 +46,15 @@ mkdir -p ~/.robustus_rc/wheelhouse
 # initialize robustus venv with cache path 
 robustus --cache ~/.robustus_rc/wheelhouse env $VENV
 
-# install bleeding edge theano at Dec, 1, 2015
-pip install scipy==0.16.1
-pip install git+git://github.com/Theano/Theano.git@30cc6380863b08a3a90ecbe083ddfb629a56161d
-pip install git+git://github.com/fchollet/keras.git@5956dbe8fad1642f5c6529008fd9126d920b0e76
-
 # install this folder in developer mode
 echo "Running robustus with options '$ROBUSTUS_OPTIONS'"
 robustus install -e . $ROBUSTUS_OPTIONS
+
+# install bleeding edge theano at Dec, 1, 2015
+pip install -v scipy==0.16.1
+pip install git+git://github.com/Theano/Theano.git@30cc6380863b08a3a90ecbe083ddfb629a56161d
+pip install git+git://github.com/fchollet/keras.git@5956dbe8fad1642f5c6529008fd9126d920b0e76
+
 
 if [[ "$(uname -s)" == "Darwin" ]]; then
     brew tap homebrew/science
