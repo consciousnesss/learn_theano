@@ -68,6 +68,9 @@ def test_1_examples_random_streams():
 
 
 def test_1_logistic_regression():
+    old_floatx = theano.config.floatX
+    theano.config.floatX = 'float64'
+
     N = 400
     features = 784
     training_steps = 2000
@@ -90,6 +93,9 @@ def test_1_logistic_regression():
                             updates=[(w, w - 0.1*gradient_w), (b, b-0.1*gradient_b)])
     predict = theano.function([x], prediction)
     pred, err = train(inputs, labels)
+
+    theano.config.floatX = old_floatx
+
     assert(err.mean() > 5)
     for i in range(training_steps):
         pred, err = train(inputs, labels)
