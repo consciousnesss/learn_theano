@@ -76,7 +76,7 @@ def test_1_logistic_regression():
 
     x = T.matrix('x')
     y = T.vector('y')
-    w = theano.shared(np.random.randn(features), name='w')
+    w = theano.shared(np.random.randn(features).astype(theano.config.floatX), name='w')
     b = theano.shared(0., name='b')
 
     probability = 1/(1 + T.exp(-T.dot(x, w) + b))
