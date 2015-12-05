@@ -10,7 +10,7 @@ before_install:
   - sudo apt-get -y install liblapack-dev gfortran cmake
   - sudo apt-get install -y --force-yes python-pyside
 install:
-  - source use_repo.sh
+  - travis_wait source use_repo.sh
 script:
   # initialize keras config
   - python -c "import keras.backend"
