@@ -68,15 +68,18 @@ def test_1_examples_random_streams():
 
 
 def test_1_logistic_regression():
+    old_floatx = theano.config.floatX
+    theano.config.floatX = 'float64'
+
     N = 400
     features = 784
     training_steps = 2000
-    inputs = np.random.randn(N, features)
-    labels = np.random.randint(size=N, low=0, high=2)
+    inputs = np.random.randn(N, features).astype(theano.config.floatX)
+    labels = np.random.randint(size=N, low=0, high=2).astype(np.int32)
 
     x = T.matrix('x')
     y = T.vector('y')
-    w = theano.shared(np.random.randn(features), name='w')
+    w = theano.shared(np.random.randn(features).astype(theano.config.floatX), name='w')
     b = theano.shared(0., name='b')
 
     probability = 1/(1 + T.exp(-T.dot(x, w) + b))
@@ -90,6 +93,9 @@ def test_1_logistic_regression():
                             updates=[(w, w - 0.1*gradient_w), (b, b-0.1*gradient_b)])
     predict = theano.function([x], prediction)
     pred, err = train(inputs, labels)
+
+    theano.config.floatX = old_floatx
+
     assert(err.mean() > 5)
     for i in range(training_steps):
         pred, err = train(inputs, labels)
