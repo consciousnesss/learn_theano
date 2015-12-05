@@ -11,4 +11,7 @@ before_install:
   - sudo apt-get install -y --force-yes python-pyside
 install:
   - source use_repo.sh
-script: py.test
+script:
+  # initialize keras config
+  - python -c "import keras.backend"
+  - py.test
